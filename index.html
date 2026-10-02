@@ -20,7 +20,7 @@ input[type=color]{width:24px;height:22px;padding:0;border:1px solid var(--line);
 input[type=range]{width:80px;accent-color:var(--acc)}
 #main{flex:1;display:flex;min-height:0}
 #wrap{flex:1;overflow:auto;padding:26px 16px 60px}
-#ed{outline:none;background:var(--paper);color:var(--ink);max-width:840px;min-height:75vh;margin:0 auto;padding:56px 64px;border-radius:10px;border:1px solid var(--line);font:18px/1.75 Georgia,serif;overflow-wrap:anywhere}
+#ed{outline:none;background:var(--paper);color:var(--ink);max-width:840px;min-height:75vh;margin:0 auto;padding:56px 64px;border-radius:10px;border:1px solid var(--line);font:11pt/1.6 Arial,sans-serif;overflow-wrap:anywhere}
 #ed p,#ed h1,#ed h2,#ed h3,#ed blockquote{margin:0 0 .6em}
 #ed blockquote{border-left:3px solid #666;padding-left:14px;opacity:.9}
 ::selection{background:#5a78ff77}
@@ -50,8 +50,8 @@ input[type=range]{width:80px;accent-color:var(--acc)}
  <div class="row">
   <button class="b" data-x="undo" title="Undo">↶</button><button class="b" data-x="redo" title="Redo">↷</button><i></i>
   <select id="blk" title="Block style"><option value="p">Paragraph</option><option value="h1">Heading 1</option><option value="h2">Heading 2</option><option value="h3">Heading 3</option><option value="blockquote">Quote</option></select>
-  <select id="fam" title="Font"><option>Georgia</option><option>Arial</option><option>Verdana</option><option>Trebuchet MS</option><option>Times New Roman</option><option>Courier New</option></select>
-  <button class="b" id="sm" title="Smaller">A−</button><input id="sz" type="number" min="6" max="200" value="18" title="Size in px (select text, then press Enter)"><button class="b" id="sp" title="Bigger">A+</button><i></i>
+  <select id="fam" title="Font"><option>Arial</option><option>Georgia</option><option>Verdana</option><option>Trebuchet MS</option><option>Times New Roman</option><option>Courier New</option></select>
+  <button class="b" id="sm" title="Smaller">A−</button><input id="sz" type="number" min="4" max="150" value="11" title="Font size in pt (select text, then press Enter)"><button class="b" id="sp" title="Bigger">A+</button><i></i>
   <button class="b" data-x="bold" title="Bold"><b>B</b></button><button class="b" data-x="italic" title="Italic"><i style="all:unset;font-style:italic">I</i></button><button class="b" data-x="underline" title="Underline"><u>U</u></button><button class="b" data-x="strikeThrough" title="Strikethrough"><s>S</s></button><i></i>
   <label title="Text color">A<input type="color" id="fg" value="#ff7a7a"></label>
   <label title="Highlight (text background)">▮<input type="color" id="bg" value="#ffd84d"></label>
@@ -89,7 +89,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>t.style.opacity=0,1800)}
 
 /* ---------- selection ---------- */
-document.addEventListener('selectionchange',()=>{const s=getSelection();if(s.rangeCount&&ed.contains(s.anchorNode)){saved=s.getRangeAt(0).cloneRange();const el=s.anchorNode.nodeType==3?s.anchorNode.parentElement:s.anchorNode;if(el.closest&&el.closest('#ed'))$('#sz').value=parseInt(getComputedStyle(el).fontSize)}});
+document.addEventListener('selectionchange',()=>{const s=getSelection();if(s.rangeCount&&ed.contains(s.anchorNode)){saved=s.getRangeAt(0).cloneRange();const el=s.anchorNode.nodeType==3?s.anchorNode.parentElement:s.anchorNode;if(el.closest&&el.closest('#ed'))$('#sz').value=Math.round(parseFloat(getComputedStyle(el).fontSize)*.75)}});
 function rng(need=true){if(!saved||(need&&saved.collapsed)){toast('Select some text first');return null}const s=getSelection(),r=saved.cloneRange();s.removeAllRanges();s.addRange(r.cloneRange());return r}
 function ex(c,v){if(saved){const s=getSelection();s.removeAllRanges();s.addRange(saved.cloneRange())}ed.focus();document.execCommand(c,false,v);sync()}
 
@@ -137,7 +137,7 @@ function addGroup(n){const r=rng();if(!r)return;
  const id=nid();mark('gp',s=>{s.dataset.g=n;s.dataset.id=id;s.style.setProperty('--h',(n*67)%360)},r)}
 
 /* ---------- apply formatting ---------- */
-const applySize=v=>{v=Math.max(6,Math.min(200,+v||18));mark('sz',s=>s.style.fontSize=v+'px')};
+const applySize=v=>{v=Math.max(4,Math.min(150,+v||11));mark('sz',s=>s.style.fontSize=v+'pt')};
 $('#sz').onchange=e=>applySize(e.target.value);
 $('#sm').onclick=()=>applySize((+$('#sz').value)-2);$('#sp').onclick=()=>applySize((+$('#sz').value)+2);
 $('#op').oninput=e=>{const v=+e.target.value;mark('op',s=>v>=100?s.style.removeProperty('opacity'):s.style.opacity=v/100)};
@@ -199,7 +199,7 @@ function side(){
 $('#side').onclick=e=>{const i=e.target.closest('.it');if(!i)return;const el=J[+i.dataset.j];el.scrollIntoView({block:'center',behavior:'smooth'});el.animate([{outline:'2px solid #8aa4ff'},{outline:'2px solid transparent'}],{duration:1400})};
 let sv;function sync(){marks();side();const t=ed.innerText.trim();
  $('#s1').textContent=(t?t.split(/\s+/).length:0)+' words · '+t.length+' chars';
- $('#s2').textContent=ed.querySelectorAll('.cm').length?'':'';clearTimeout(sv);sv=setTimeout(()=>{try{localStorage.setItem('mts-doc',ed.innerHTML)}catch{}},400)}
+ $('#s2').textContent=ed.querySelectorAll('.cm').length?'':'';clearTimeout(sv);sv=setTimeout(()=>{try{localStorage.setItem('mts2-doc',ed.innerHTML)}catch{}},400)}
 
 /* ---------- export ---------- */
 const BLK=/^(DIV|P|H[1-6]|LI|BLOCKQUOTE)$/;
@@ -221,7 +221,7 @@ function docsHTML(){
  c.querySelectorAll('.op').forEach((e,i)=>{e.style.opacity='';e.style.color=ops[i]});
  c.querySelectorAll('.cm').forEach(e=>{e.style.textDecoration='underline';if(isLast(e,'cm',c))e.insertAdjacentHTML('afterend','<span style="color:#6b7280;font-style:italic"> ('+esc(e.dataset.c)+')</span>')});
  c.querySelectorAll('.gp').forEach(e=>{if(isLast(e,'gp',c))e.insertAdjacentHTML('afterend','<sup>['+e.dataset.g+']</sup>')});
- return'<meta charset="utf-8"><div style="color:#000;font-family:Georgia,serif">'+c.innerHTML+'</div>'}
+ return'<meta charset="utf-8"><div style="color:#000;font-family:Arial,sans-serif;font-size:11pt">'+c.innerHTML+'</div>'}
 function copyData(html,txt){let ok=false;const f=e=>{e.clipboardData.setData('text/plain',txt);if(html)e.clipboardData.setData('text/html',html);e.preventDefault();ok=true};
  document.addEventListener('copy',f);try{document.execCommand('copy')}catch{}document.removeEventListener('copy',f);
  if(ok)return Promise.resolve();
@@ -233,16 +233,12 @@ function dl(name,type,data){const a=document.createElement('a');a.href=URL.creat
 $('#dt').onclick=()=>dl('document.txt','text/plain',plain());
 $('#dh').onclick=()=>{const c=ed.cloneNode(true);c.removeAttribute('id');c.removeAttribute('contenteditable');c.querySelectorAll('.cm').forEach(e=>e.title=e.dataset.c);
  const cs=getComputedStyle(document.documentElement);
- dl('document.html','text/html','<!DOCTYPE html><meta charset="utf-8"><title>Document</title><style>body{background:'+cs.getPropertyValue('--paper')+';color:'+cs.getPropertyValue('--ink')+';font:18px/1.75 Georgia,serif;max-width:800px;margin:40px auto;padding:0 20px}.cm{text-decoration:underline wavy '+cs.getPropertyValue('--squig')+';text-underline-offset:4px;cursor:help}.gp{box-shadow:inset 0 -2px 0 hsl(var(--h) 75% 62%)}.gp.last::after{content:"[" attr(data-g) "]";font-size:.6em;vertical-align:super}</style>'+c.innerHTML)};
+ dl('document.html','text/html','<!DOCTYPE html><meta charset="utf-8"><title>Document</title><style>body{background:'+cs.getPropertyValue('--paper')+';color:'+cs.getPropertyValue('--ink')+';font:11pt/1.6 Arial,sans-serif;max-width:800px;margin:40px auto;padding:0 20px}.cm{text-decoration:underline wavy '+cs.getPropertyValue('--squig')+';text-underline-offset:4px;cursor:help}.gp{box-shadow:inset 0 -2px 0 hsl(var(--h) 75% 62%)}.gp.last::after{content:"[" attr(data-g) "]";font-size:.6em;vertical-align:super}</style>'+c.innerHTML)};
 $('#new').onclick=()=>{if(confirm('Clear the whole document?')){ed.innerHTML='<p><br></p>';sync()}};
 
 /* ---------- boot ---------- */
 document.execCommand('styleWithCSS',false,true);document.execCommand('defaultParagraphSeparator',false,'p');
-let doc=null;try{doc=localStorage.getItem('mts-doc');const p=localStorage.getItem('mts-paper');if(p)setPaper(p)}catch{}
-ed.innerHTML=doc||`<h2>Markup Text Studio</h2>
-<p>Select text and right-click to add a comment or a group. Hover a squiggly word to read its note.</p>
-<p>What is a <span class="cm" data-id="d1" data-c="It's an animal">Fox</span>?</p>
-<p>Hello, I am <span class="gp last" data-g="1" data-id="d2" style="--h:67">John</span>.<br>This is a <span class="gp last" data-g="1" data-id="d3" style="--h:67">test</span>.<br>Is it <span class="gp last" data-g="1" data-id="d4" style="--h:67">okay</span>?</p>
-<p>Try <span style="color:#ff7a7a">colors</span>, <span style="background-color:#ffd84d;color:#222">highlights</span>, <span class="sz" style="font-size:30px">sizes</span> and <span class="op" style="opacity:.4">transparent text</span>.</p>`;
-sync();
+let doc=null;try{doc=localStorage.getItem('mts2-doc');const p=localStorage.getItem('mts-paper');if(p)setPaper(p)}catch{}
+ed.innerHTML=doc||'<p><br></p>';
+sync();ed.focus();
 </script></body></html>
