@@ -44,6 +44,11 @@ input[type=range]{width:80px;accent-color:var(--acc)}
 #dlg textarea{width:100%;height:96px;margin:10px 0;background:#0f1015;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit;resize:vertical}
 #dlg .acts{display:flex;justify-content:flex-end;gap:6px}
 #toast{position:fixed;bottom:44px;left:50%;transform:translateX(-50%);background:#2a3566;border:1px solid #3d4c92;padding:8px 14px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:80}
+.clean .cm{text-decoration:none}.clean .gp{box-shadow:none}.clean .gp.last::after{display:none}
+#fr{display:none;gap:4px;align-items:center;padding:4px 0;flex-wrap:wrap}
+#fr input,#title{background:#0f1015;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font:inherit}
+#title{width:190px}
+@media print{@page{margin:18mm}body{display:block;height:auto;background:#fff}#tb,#side,#st,#tip,#cmenu,#dlg,#toast{display:none!important}#main{display:block}#wrap{overflow:visible;padding:0}#ed{zoom:1!important;border:0;background:#fff;color:#000;padding:0;margin:0;max-width:none;min-height:0}.cm{text-decoration-color:#555}body:not(.pc) .cm{text-decoration:none}body:not(.pc) .gp{box-shadow:none}body:not(.pc) .gp.last::after{display:none}.pc .cm.cl::after{content:" (" attr(data-c) ")";color:#555;font-style:italic;font-size:.85em}}
 @media(max-width:820px){#side{display:none}#ed{padding:28px 20px}}
 </style></head><body>
 <div id="tb">
@@ -59,27 +64,33 @@ input[type=range]{width:80px;accent-color:var(--acc)}
   <label title="Text opacity">◐<input type="range" id="op" min="5" max="100" value="100"></label><i></i>
   <button class="b" data-x="justifyLeft" title="Align left">☰</button><button class="b" data-x="justifyCenter" title="Center">≡</button><button class="b" data-x="justifyRight" title="Align right">☷</button>
   <button class="b" data-x="insertUnorderedList" title="Bullets">• List</button><button class="b" data-x="insertOrderedList" title="Numbers">1. List</button>
+  <button class="b" data-x="outdent" title="Decrease indent">⇤</button><button class="b" data-x="indent" title="Increase indent">⇥</button>
+  <button class="b" data-x="superscript" title="Superscript">x²</button><button class="b" data-x="subscript" title="Subscript">x₂</button>
+  <select id="ls" title="Line spacing"><option value="">Spacing</option><option>1</option><option>1.15</option><option>1.5</option><option>2</option></select>
+  <button class="b" id="bcase" title="Change case">Aa</button><button class="b" id="blnk" title="Add link to selection">Link</button><button class="b" data-x="unlink" title="Remove link">Unlink</button><button class="b" id="bins" title="Insert table, divider, date, page break">Insert</button>
   <button class="b" id="clr" title="Clear formatting">Clear</button>
  </div>
  <div class="row">
-  <button class="b" id="bcm" title="Comment on selection (Ctrl+Alt+M)">💬 Comment</button>
+  <input id="title" placeholder="Untitled document" title="Document title (used for file names)"><i></i>
+  <button class="b" id="bcm" title="Comment on selection (Ctrl+Alt+M)">Comment</button>
   <button class="b" id="ucm" title="Remove comment">Uncomment</button><i></i>
   <button class="b" id="bgp" title="New group from selection (Ctrl+Alt+G)">⧉ New group</button>
   <select id="gsel" title="Add selection to an existing group"></select>
   <button class="b" id="ugp" title="Remove from group">Ungroup</button><i></i>
   <label title="Paper color">Paper <input type="color" id="paper" value="#1a1b21"></label><i></i>
-  <button class="b p" id="cpl">Copy plain text</button>
-  <button class="b p" id="cdoc">Copy for Google Docs</button>
-  <button class="b" id="dh">⬇ HTML</button><button class="b" id="dt">⬇ TXT</button>
-  <button class="b" id="new">New</button>
+  <button class="b" id="bfind" title="Find and replace (Ctrl+H)">Find</button><button class="b" id="bclean" title="Hide squiggles and group markers">Clean view</button>
+  <select id="zoom" title="Zoom"><option value="0.8">80%</option><option value="0.9">90%</option><option value="1" selected>100%</option><option value="1.25">125%</option><option value="1.5">150%</option></select><i></i>
+  <button class="b p" id="bcopy">Copy ▾</button><button class="b p" id="bdl">Download ▾</button><button class="b p" id="bshare">Share ▾</button><i></i>
+  <button class="b" id="bopen">Open</button><button class="b" id="new">New</button>
  </div>
+<div id="fr"><input id="fq" placeholder="Find"><input id="frp" placeholder="Replace with"><button class="b" id="fp">Prev</button><button class="b" id="fn">Next</button><button class="b" id="fr1">Replace</button><button class="b" id="fra">Replace all</button></div>
 </div>
 <div id="main">
  <div id="wrap"><div id="ed" contenteditable="true" spellcheck="true"></div></div>
  <aside id="side"></aside>
 </div>
 <div id="st"><span id="s1"></span><span id="s2"></span><span style="margin-left:auto">Right-click selected text for comments &amp; groups</span></div>
-<div id="tip"></div><div id="cmenu"></div><div id="toast"></div>
+<input type="file" id="imp" hidden accept=".json,.html,.htm,.txt,.md"><div id="tip"></div><div id="cmenu"></div><div id="toast"></div>
 <div id="dlg"><div class="card"><b id="dtt"></b><textarea id="dtx" placeholder="Write a comment…"></textarea><div class="acts"><button class="b" id="dno">Cancel</button><button class="b p" id="dok">Save</button></div></div></div>
 <script>
 const $=s=>document.querySelector(s),ed=$('#ed');
@@ -150,9 +161,18 @@ $('#bcm').onclick=()=>addComment();$('#ucm').onclick=()=>strip('cm');
 $('#bgp').onclick=()=>addGroup();$('#ugp').onclick=()=>strip('gp');
 $('#gsel').onchange=e=>{if(e.target.value)addGroup(+e.target.value);e.target.value=''};
 $('#tb').addEventListener('mousedown',e=>{if(!/INPUT|SELECT|OPTION/.test(e.target.tagName)&&!e.target.closest('label'))e.preventDefault()});
-ed.addEventListener('keydown',e=>{if(e.ctrlKey&&e.altKey&&e.code=='KeyM'){e.preventDefault();addComment()}if(e.ctrlKey&&e.altKey&&e.code=='KeyG'){e.preventDefault();addGroup()}});
+ed.addEventListener('keydown',e=>{if(e.ctrlKey&&e.altKey&&e.code=='KeyM'){e.preventDefault();addComment()}if(e.ctrlKey&&e.altKey&&e.code=='KeyG'){e.preventDefault();addGroup()}if(e.ctrlKey&&e.code=='KeyH'){e.preventDefault();$('#bfind').click()}});
 ed.addEventListener('paste',e=>{e.preventDefault();document.execCommand('insertText',false,e.clipboardData.getData('text/plain'))});
-ed.addEventListener('input',sync);
+ed.addEventListener('beforeinput',e=>{
+ if(!/^insert(Text|CompositionText)$/.test(e.inputType))return;const s=getSelection();if(!s.rangeCount||!s.isCollapsed)return;
+ const n=s.anchorNode,el=n.nodeType==3?n.parentElement:n;let top=null;
+ for(let a=el.closest('span.cm,span.gp');a&&ed.contains(a);a=a.parentElement&&a.parentElement.closest('span.cm,span.gp')){
+  const q=document.createRange();q.selectNodeContents(a);q.setStart(s.anchorNode,s.anchorOffset);if(q.toString()==='')top=a;else break}
+ if(top){const z=document.createTextNode('\u200b');top.after(z);s.collapse(z,1)}});
+ed.addEventListener('input',e=>{
+ if(e.inputType=='insertParagraph'){const s=getSelection();for(let k=0;k<4&&s.rangeCount;k++){const n=s.anchorNode,a=(n.nodeType==3?n.parentElement:n).closest('span.cm,span.gp');
+  if(a&&ed.contains(a)&&!a.textContent.replace(/\u200b/g,'')){const p=a.parentNode,i=[...p.childNodes].indexOf(a);a.replaceWith(...a.childNodes);s.collapse(p,i)}else break}}
+ sync()});
 
 /* ---------- paper ---------- */
 function setPaper(c){const n=parseInt(c.slice(1),16),l=(.299*(n>>16)+.587*((n>>8)&255)+.114*(n&255))/255,R=document.documentElement.style;
@@ -166,13 +186,13 @@ function menu(x,y,items){cmenu.innerHTML='';items.forEach(it=>{if(!it){cmenu.app
  cmenu.style.display='block';cmenu.style.left=Math.min(x,innerWidth-230)+'px';cmenu.style.top=Math.max(4,Math.min(y,innerHeight-cmenu.offsetHeight-8))+'px'}
 ed.addEventListener('contextmenu',e=>{e.preventDefault();tip.style.display='none';
  const sel=saved&&!saved.collapsed,c=e.target.closest('.cm'),g=e.target.closest('.gp'),it=[];
- if(sel)it.push(['💬 Add comment',()=>addComment()]);
- if(c)it.push(['✏️ Edit comment',()=>addComment(c)],['🗑 Remove comment',()=>strip('cm',c)]);
+ if(sel)it.push(['Add comment',()=>addComment()]);
+ if(c)it.push(['Edit comment',()=>addComment(c)],['Remove comment',()=>strip('cm',c)]);
  if(sel||c)it.push(null);
- if(sel){it.push(['⧉ New group from selection',()=>addGroup()]);groupNums().forEach(n=>it.push(['➕ Add to group '+n,()=>addGroup(n)]))}
- if(g)it.push(['➖ Remove from group '+g.dataset.g,()=>strip('gp',g)]);
+ if(sel){it.push(['⧉ New group from selection',()=>addGroup()]);groupNums().forEach(n=>it.push(['Add to group '+n,()=>addGroup(n)]))}
+ if(g)it.push(['Remove from group '+g.dataset.g,()=>strip('gp',g)]);
  if(sel)it.push(null,['Opacity 50%',()=>mark('op',s=>s.style.opacity=.5)],['Opacity 100%',()=>mark('op',s=>s.style.removeProperty('opacity'))]);
- it.push(null,['Copy plain text',copyPlain],['Copy for Google Docs',copyDocs]);
+ it.push(null,['Copy plain text',copyPlain],['Copy for Google Docs',copyDocs],['Copy as Markdown',copyMd]);
  menu(e.clientX,e.clientY,it)});
 document.addEventListener('mousedown',e=>{if(!cmenu.contains(e.target))hide()});
 cmenu.addEventListener('mousedown',e=>e.preventDefault());
@@ -184,7 +204,7 @@ ed.addEventListener('mousemove',e=>{const c=e.target.closest&&e.target.closest('
 ed.addEventListener('mouseleave',()=>tip.style.display='none');
 
 /* ---------- sidebar & status ---------- */
-function marks(){ed.querySelectorAll('.last').forEach(e=>e.classList.remove('last'));const m={};ed.querySelectorAll('span.gp').forEach(e=>m[e.dataset.id]=e);Object.values(m).forEach(e=>e.classList.add('last'))}
+function marks(){ed.querySelectorAll('.last').forEach(e=>e.classList.remove('last'));const m={};ed.querySelectorAll('span.gp').forEach(e=>m[e.dataset.id]=e);Object.values(m).forEach(e=>e.classList.add('last'));const q={};ed.querySelectorAll('span.cm').forEach(e=>{e.classList.remove('cl');q[e.dataset.id]=e});Object.values(q).forEach(e=>e.classList.add('cl'))}
 function side(){
  const cm={},gp={};J=[];
  ed.querySelectorAll('span.cm').forEach(e=>{const o=cm[e.dataset.id]??={el:e,c:e.dataset.c,t:''};o.t+=e.textContent});
@@ -197,12 +217,12 @@ function side(){
  $('#side').innerHTML=h;
  $('#gsel').innerHTML='<option value="">Add to group…</option>'+gk.map(g=>`<option>${g}</option>`).join('')}
 $('#side').onclick=e=>{const i=e.target.closest('.it');if(!i)return;const el=J[+i.dataset.j];el.scrollIntoView({block:'center',behavior:'smooth'});el.animate([{outline:'2px solid #8aa4ff'},{outline:'2px solid transparent'}],{duration:1400})};
-let sv;function sync(){marks();side();const t=ed.innerText.trim();
- $('#s1').textContent=(t?t.split(/\s+/).length:0)+' words · '+t.length+' chars';
- $('#s2').textContent=ed.querySelectorAll('.cm').length?'':'';clearTimeout(sv);sv=setTimeout(()=>{try{localStorage.setItem('mts2-doc',ed.innerHTML)}catch{}},400)}
+let sv;function sync(){marks();side();const t=ed.innerText.replace(/\u200b/g,'').trim(),w=t?t.split(/\s+/).length:0;
+ $('#s1').textContent=w+' words · '+t.length+' chars · '+Math.max(w?1:0,Math.round(w/200))+' min read';
+ $('#s2').textContent='';clearTimeout(sv);sv=setTimeout(()=>{try{localStorage.setItem('mts2-doc',ed.innerHTML);localStorage.setItem('mts2-title',$('#title').value)}catch{}},400)}
 
 /* ---------- export ---------- */
-const BLK=/^(DIV|P|H[1-6]|LI|BLOCKQUOTE)$/;
+const BLK=/^(DIV|P|H[1-6]|LI|BLOCKQUOTE|TR|HR)$/;
 const isLast=(c,cls,root)=>{const a=root.querySelectorAll('.'+cls+'[data-id="'+c.dataset.id+'"]');return a[a.length-1]===c};
 function ser(n,root){let s='';n.childNodes.forEach(c=>{
  if(c.nodeType==3){s+=c.nodeValue;return}if(c.nodeType!=1)return;
@@ -211,9 +231,9 @@ function ser(n,root){let s='';n.childNodes.forEach(c=>{
  if(c.classList.contains('cm')&&isLast(c,'cm',root))t+=' ('+c.dataset.c+')';
  if(c.classList.contains('gp')&&isLast(c,'gp',root))t+='['+c.dataset.g+']';
  if(c.tagName=='LI')t='• '+t;
- if(BLK.test(c.tagName))t+='\n';
+ if(/^T[DH]$/.test(c.tagName))t+='\t';if(BLK.test(c.tagName))t+='\n';
  s+=t});return s}
-const plain=()=>ser(ed,ed).replace(/\u00a0/g,' ').replace(/\n{3,}/g,'\n\n').trim();
+const plain=()=>ser(ed,ed).replace(/\u200b/g,'').replace(/\u00a0/g,' ').replace(/\n{3,}/g,'\n\n').trim();
 function docsHTML(){
  const base=getComputedStyle(ed).color;
  const ops=[...ed.querySelectorAll('.op')].map(e=>{const cs=getComputedStyle(e).color,o=parseFloat(e.style.opacity||1),m=cs==base?[0,0,0]:cs.match(/[\d.]+/g).map(Number);return'rgb('+m.slice(0,3).map(v=>Math.round(v*o+255*(1-o))).join(',')+')'});
@@ -221,24 +241,83 @@ function docsHTML(){
  c.querySelectorAll('.op').forEach((e,i)=>{e.style.opacity='';e.style.color=ops[i]});
  c.querySelectorAll('.cm').forEach(e=>{e.style.textDecoration='underline';if(isLast(e,'cm',c))e.insertAdjacentHTML('afterend','<span style="color:#6b7280;font-style:italic"> ('+esc(e.dataset.c)+')</span>')});
  c.querySelectorAll('.gp').forEach(e=>{if(isLast(e,'gp',c))e.insertAdjacentHTML('afterend','<sup>['+e.dataset.g+']</sup>')});
- return'<meta charset="utf-8"><div style="color:#000;font-family:Arial,sans-serif;font-size:11pt">'+c.innerHTML+'</div>'}
+ return'<meta charset="utf-8"><div style="color:#000;font-family:Arial,sans-serif;font-size:11pt">'+c.innerHTML.replace(/\u200b/g,'')+'</div>'}
 function copyData(html,txt){let ok=false;const f=e=>{e.clipboardData.setData('text/plain',txt);if(html)e.clipboardData.setData('text/html',html);e.preventDefault();ok=true};
  document.addEventListener('copy',f);try{document.execCommand('copy')}catch{}document.removeEventListener('copy',f);
  if(ok)return Promise.resolve();
  return(html&&window.ClipboardItem?navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([txt],{type:'text/plain'})})]):navigator.clipboard.writeText(txt))}
 const copyPlain=()=>copyData(null,plain()).then(()=>toast('Plain text copied'),()=>toast('Copy blocked by the browser'));
 const copyDocs=()=>copyData(docsHTML(),plain()).then(()=>toast('Copied. Paste into Google Docs (Ctrl+V)'),()=>toast('Copy blocked by the browser'));
-$('#cpl').onclick=copyPlain;$('#cdoc').onclick=copyDocs;
+
 function dl(name,type,data){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),999)}
-$('#dt').onclick=()=>dl('document.txt','text/plain',plain());
-$('#dh').onclick=()=>{const c=ed.cloneNode(true);c.removeAttribute('id');c.removeAttribute('contenteditable');c.querySelectorAll('.cm').forEach(e=>e.title=e.dataset.c);
- const cs=getComputedStyle(document.documentElement);
- dl('document.html','text/html','<!DOCTYPE html><meta charset="utf-8"><title>Document</title><style>body{background:'+cs.getPropertyValue('--paper')+';color:'+cs.getPropertyValue('--ink')+';font:11pt/1.6 Arial,sans-serif;max-width:800px;margin:40px auto;padding:0 20px}.cm{text-decoration:underline wavy '+cs.getPropertyValue('--squig')+';text-underline-offset:4px;cursor:help}.gp{box-shadow:inset 0 -2px 0 hsl(var(--h) 75% 62%)}.gp.last::after{content:"[" attr(data-g) "]";font-size:.6em;vertical-align:super}</style>'+c.innerHTML)};
+const fail=()=>toast('Copy blocked by the browser'),title=()=>$('#title').value.trim()||'document',z0=t=>t.replace(/\u200b/g,'').replace(/\u00a0/g,' ');
+const pap=()=>getComputedStyle(document.documentElement).getPropertyValue('--paper').trim();
+const projJSON=()=>JSON.stringify({v:1,t:$('#title').value,h:ed.innerHTML,p:pap()});
+function mdw(t,k){return t.replace(/^(\s*)([\s\S]*?)(\s*)$/,(m,a,b,c)=>b?a+k+b+k+c:m)}
+function md(n,root){let s='';n.childNodes.forEach(c=>{
+ if(c.nodeType==3){s+=c.nodeValue;return}if(c.nodeType!=1)return;
+ const T=c.tagName,st=c.style;
+ if(T=='BR'){if(c.parentNode.childNodes.length>1)s+='  \n';return}
+ if(T=='HR'){s+='---\n\n';return}
+ if(T=='UL'||T=='OL'){let i=0;c.childNodes.forEach(li=>{if(li.tagName=='LI')s+=(T=='UL'?'- ':++i+'. ')+md(li,root).trim()+'\n'});s+='\n';return}
+ if(T=='TABLE'){const R=[...c.rows].map(r=>'| '+[...r.cells].map(x=>md(x,root).trim().replace(/\|/g,'\\|')).join(' | ')+' |');if(R.length>1)R.splice(1,0,'|'+' --- |'.repeat(c.rows[0].cells.length));s+=R.join('\n')+'\n\n';return}
+ let t=md(c,root);
+ if(/^(B|STRONG)$/.test(T)||st.fontWeight=='bold'||+st.fontWeight>=600)t=mdw(t,'**');
+ if(/^(I|EM)$/.test(T)||st.fontStyle=='italic')t=mdw(t,'*');
+ if(/^(S|STRIKE|DEL)$/.test(T)||/line-through/.test(st.textDecoration||st.textDecorationLine||''))t=mdw(t,'~~');
+ if(T=='U')t='<u>'+t+'</u>';if(T=='SUP'||T=='SUB')t='<'+T.toLowerCase()+'>'+t+'</'+T.toLowerCase()+'>';
+ if(st.backgroundColor&&st.backgroundColor!='transparent')t='<mark>'+t+'</mark>';
+ if(T=='A')t='['+t+']('+c.getAttribute('href')+')';
+ if(c.classList.contains('cm')&&isLast(c,'cm',root))t+=' ('+c.dataset.c+')';
+ if(c.classList.contains('gp')&&isLast(c,'gp',root))t+='['+c.dataset.g+']';
+ if(/^H[1-6]$/.test(T))t='#'.repeat(+T[1])+' '+t.trim()+'\n\n';
+ else if(T=='BLOCKQUOTE')t=t.trim().split('\n').map(l=>'> '+l).join('\n')+'\n\n';
+ else if(T=='P'||T=='DIV')t+='\n\n';
+ s+=t});return s}
+const toMd=()=>z0(md(ed,ed)).replace(/\n{3,}/g,'\n\n').trim();
+function htmlDoc(){const c=ed.cloneNode(true);c.removeAttribute('id');c.removeAttribute('contenteditable');c.style.zoom='';c.querySelectorAll('.cm').forEach(e=>e.title=e.dataset.c);const cs=getComputedStyle(document.documentElement);
+ return'<!DOCTYPE html><meta charset="utf-8"><title>'+esc(title())+'</title><style>body{background:'+pap()+';color:'+cs.getPropertyValue('--ink')+';font:11pt/1.6 Arial,sans-serif;max-width:800px;margin:40px auto;padding:0 20px}.cm{text-decoration:underline wavy '+cs.getPropertyValue('--squig')+';text-underline-offset:4px;cursor:help}.gp{box-shadow:inset 0 -2px 0 hsl(var(--h) 75% 62%)}.gp.last::after{content:"[" attr(data-g) "]";font-size:.6em;vertical-align:super}</style>'+c.innerHTML.replace(/\u200b/g,'')}
+const wordDoc=()=>'<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>'+esc(title())+'</title></head><body>'+docsHTML().replace('<meta charset="utf-8">','')+'</body></html>';
+function printDoc(withC){const b=document.body,t=document.title;b.classList.toggle('pc',withC);document.title=title();window.print();document.title=t;b.classList.remove('pc')}
+const copyMd=()=>copyData(null,toMd()).then(()=>toast('Markdown copied'),fail);
+const copyHtml=()=>copyData(null,htmlDoc()).then(()=>toast('HTML copied'),fail);
+const at=(e,items)=>{const b=e.currentTarget.getBoundingClientRect();menu(b.left,b.bottom+4,items)};
+$('#bcopy').onclick=e=>at(e,[['Plain text',copyPlain],['Google Docs / rich text',copyDocs],['Markdown',copyMd],['HTML source',copyHtml]]);
+$('#bdl').onclick=e=>at(e,[['PDF (clean)',()=>printDoc(false)],['PDF (with comments and groups)',()=>printDoc(true)],null,['Word (.doc)',()=>dl(title()+'.doc','application/msword',wordDoc())],['HTML (.html)',()=>dl(title()+'.html','text/html',htmlDoc())],['Markdown (.md)',()=>dl(title()+'.md','text/markdown',toMd())],['Plain text (.txt)',()=>dl(title()+'.txt','text/plain',plain())],null,['Project file (.json, re-openable)',()=>dl(title()+'.json','application/json',projJSON())]]);
+async function enc(str){const b=new Uint8Array(await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());let x='';b.forEach(v=>x+=String.fromCharCode(v));return btoa(x).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+async function dec(h){const u=Uint8Array.from(atob(h.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));return await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text()}
+async function shareLink(){try{const u=location.href.split('#')[0]+'#d='+await enc(projJSON());await copyData(null,u);toast('Link copied ('+Math.round(u.length/1024)+' KB). It opens the document wherever this page is hosted')}catch{fail()}}
+async function shareDev(){const f=new File([htmlDoc()],title()+'.html',{type:'text/html'});try{if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({title:title(),text:plain().slice(0,2000),files:[f]});else if(navigator.share)await navigator.share({title:title(),text:plain()});else toast('Device sharing is not available here. Use the link, email or a project file')}catch{}}
+$('#bshare').onclick=e=>at(e,[['Share with device...',shareDev],['Email as text',()=>{location.href='mailto:?subject='+encodeURIComponent(title())+'&body='+encodeURIComponent(plain().slice(0,1800))}],['Copy share link',shareLink],['Save project file to send',()=>dl(title()+'.json','application/json',projJSON())]]);
+function sanitize(h){const t=document.createElement('template');t.innerHTML=h;t.content.querySelectorAll('script,iframe,object,embed,style,link,meta,title').forEach(e=>e.remove());t.content.querySelectorAll('*').forEach(e=>[...e.attributes].forEach(a=>{if(/^on/i.test(a.name)||/^\s*javascript:/i.test(a.value))e.removeAttribute(a.name)}));return t.innerHTML}
+function loadDoc(o){$('#title').value=o.t||'';if(o.p)setPaper(o.p);ed.innerHTML=sanitize(o.h||'')||'<p><br></p>';sync()}
+$('#bopen').onclick=()=>$('#imp').click();
+$('#imp').onchange=async e=>{const f=e.target.files[0];if(!f)return;const x=await f.text(),n=f.name.replace(/\.[^.]+$/,'');
+ if(/\.json$/i.test(f.name)){try{const o=JSON.parse(x);loadDoc({...o,t:o.t||n})}catch{toast('Not a valid project file')}}
+ else if(/\.html?$/i.test(f.name))loadDoc({t:n,h:new DOMParser().parseFromString(x,'text/html').body.innerHTML});
+ else loadDoc({t:n,h:x.split(/\r?\n/).map(l=>'<p>'+(esc(l)||'<br>')+'</p>').join('')});e.target.value=''};
+$('#title').oninput=sync;
+/* more tools */
+function caseSel(f){const r=rng();if(!r)return;nodes(r).forEach(n=>n.nodeValue=f(n.nodeValue));sync()}
+$('#bcase').onclick=e=>at(e,[['UPPERCASE',()=>caseSel(s=>s.toUpperCase())],['lowercase',()=>caseSel(s=>s.toLowerCase())],['Title Case',()=>caseSel(s=>s.toLowerCase().replace(/(^|[\s("\-])\S/g,m=>m.toUpperCase()))],['Sentence case',()=>caseSel(s=>s.toLowerCase().replace(/(^|[.!?]\s+)\S/g,m=>m.toUpperCase()))]]);
+$('#blnk').onclick=()=>{if(!saved||saved.collapsed)return toast('Select some text first');ask('Link address','https://').then(v=>{if(v)ex('createLink',v)})};
+$('#bins').onclick=e=>at(e,[['Table (3 x 3)',()=>ex('insertHTML','<table style="border-collapse:collapse;width:100%">'+('<tr>'+'<td style="border:1px solid #888;padding:6px">&nbsp;</td>'.repeat(3)+'</tr>').repeat(3)+'</table><p><br></p>')],['Divider line',()=>ex('insertHorizontalRule')],["Today's date",()=>ex('insertText',new Date().toLocaleDateString(undefined,{dateStyle:'long'}))],['Page break (for PDF)',()=>ex('insertHTML','<div style="break-after:page;height:0"></div><p><br></p>')]]);
+$('#ls').onchange=e=>{const v=e.target.value;e.target.value='';const r=rng(false);if(!r||!v)return;(r.collapsed?[r.startContainer]:nodes(r)).forEach(n=>{const b=(n.nodeType==3?n.parentElement:n).closest('p,h1,h2,h3,li,blockquote,div');if(b&&b!==ed&&ed.contains(b))b.style.lineHeight=v});sync()};
+$('#zoom').onchange=e=>ed.style.zoom=e.target.value;
+$('#bclean').onclick=e=>{document.body.classList.toggle('clean');e.currentTarget.classList.toggle('p')};
+const inEd=()=>{const s=getSelection();return s.rangeCount&&ed.contains(s.anchorNode)};
+function findN(back){const q=$('#fq').value;if(!q)return;if(saved){const s=getSelection();s.removeAllRanges();s.addRange(saved.cloneRange())}ed.focus();
+ for(let i=0;i<4;i++){if(!window.find(q,false,back,true))break;if(inEd())return}toast('No matches')}
+$('#bfind').onclick=()=>{const f=$('#fr'),o=f.style.display=='flex';f.style.display=o?'none':'flex';if(!o)$('#fq').focus()};
+$('#fn').onclick=()=>findN(false);$('#fp').onclick=()=>findN(true);$('#fq').onkeydown=e=>{if(e.key=='Enter')findN(e.shiftKey)};
+$('#fr1').onclick=()=>{const q=$('#fq').value;ed.focus();if(inEd()&&q&&getSelection().toString().toLowerCase()==q.toLowerCase()){document.execCommand('insertText',false,$('#frp').value);sync()}findN(false)};
+$('#fra').onclick=()=>{const q=$('#fq').value;if(!q)return;ed.focus();getSelection().collapse(ed,0);let n=0;while(n<5000&&window.find(q,false,false,false)){if(!inEd())break;document.execCommand('insertText',false,$('#frp').value);n++}sync();toast(n+' replaced')};
 $('#new').onclick=()=>{if(confirm('Clear the whole document?')){ed.innerHTML='<p><br></p>';sync()}};
 
 /* ---------- boot ---------- */
 document.execCommand('styleWithCSS',false,true);document.execCommand('defaultParagraphSeparator',false,'p');
-let doc=null;try{doc=localStorage.getItem('mts2-doc');const p=localStorage.getItem('mts-paper');if(p)setPaper(p)}catch{}
+let doc=null;try{doc=localStorage.getItem('mts2-doc');const p=localStorage.getItem('mts-paper');if(p)setPaper(p);$('#title').value=localStorage.getItem('mts2-title')||''}catch{}
 ed.innerHTML=doc||'<p><br></p>';
 sync();ed.focus();
+if(location.hash.startsWith('#d='))dec(location.hash.slice(3)).then(t=>{loadDoc(JSON.parse(t));history.replaceState(null,'',location.pathname+location.search)}).catch(()=>toast('Could not open the shared link'));
 </script></body></html>
